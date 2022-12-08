@@ -1,0 +1,2 @@
+# libadb++
+VERY INCOMPLETE, DO NOT USE
