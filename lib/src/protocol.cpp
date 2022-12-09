@@ -1,72 +1,83 @@
 #include <sstream>
 #include "adb/protocol.h"
+#include <iostream>
 
 namespace adb
 {
 namespace protocol
 {
+
+payload_t make_payload(const char* _p_payload)
+{
+	payload_t payload;
+	payload.insert(payload.end(), _p_payload, _p_payload + strlen(_p_payload));
+	return payload;
+}
+
+uint32_t payload_size(const payload_t& payload)
+{
+	return static_cast<int32_t>(payload.size());
+}
+
 const size_t msg_field_size = sizeof(uint32_t);
 
 template<typename Data>
-void put_data_in_buffer(std::stringbuf& buffer, Data& data, size_t size)
+void put_to_buffer(std::stringbuf& buffer, Data& data, size_t size)
 {
 	buffer.sputn(reinterpret_cast<const char*>(&data), size);
 }
 
 template<typename Data>
-void put_data_from_buffer(std::stringbuf& buffer, Data& dest, size_t size)
+Data read_from_buffer(std::stringbuf& buffer, size_t size)
 {
+	Data dest;
 	buffer.sgetn(reinterpret_cast<char*>(&dest), size);
+	return dest;
 }
 
 adb_packet serializer::deserialize(const std::string& input)
 {
 	std::stringbuf buffer(input);
 
-	uint32_t command;
-	uint32_t arg1;
-	uint32_t arg2;
-	uint32_t data_length;
-	uint32_t data_crc32;
-	uint32_t magic;
-	put_data_from_buffer(buffer, command, msg_field_size);
-	put_data_from_buffer(buffer, arg1, msg_field_size);
-	put_data_from_buffer(buffer, arg2, msg_field_size);
-	put_data_from_buffer(buffer, data_length, msg_field_size);
-	put_data_from_buffer(buffer, data_crc32, msg_field_size);
-	put_data_from_buffer(buffer, magic, msg_field_size);
-	
-	char* payload = new char[data_length];
-	if (data_length > 0)
+	adb_message message;
+	adb_packet packet;
+
+	message.command = read_from_buffer<uint32_t>(buffer, msg_field_size);
+	message.arg1 = read_from_buffer<uint32_t>(buffer, msg_field_size);
+	message.arg2 = read_from_buffer<uint32_t>(buffer, msg_field_size);
+	message.data_length = read_from_buffer<uint32_t>(buffer, msg_field_size);
+	message.data_crc32 = read_from_buffer<uint32_t>(buffer, msg_field_size);
+	message.magic = read_from_buffer<uint32_t>(buffer, msg_field_size);
+
+	packet.msg = message;
+
+	if (message.data_length > 0)
 	{
-		buffer.sgetn(payload, data_length);
+		for (uint32_t i = 0; i < message.data_length; i++)
+		{
+			packet.payload.push_back(buffer.sbumpc());
+		}
 	}
 
-	const adb_message message {command, arg1, arg2, data_length, data_crc32, magic};
-	const adb_packet packet {message, std::string(payload)};
-
-	delete[] payload;
 	return packet;
 };
 
 std::string serializer::serialize(const adb_packet& packet)
 {
-	const size_t msg_field_size = sizeof(uint32_t);
-	const size_t payload_size = packet.payload.size();
-
 	std::stringbuf buffer;
-	put_data_in_buffer(buffer, packet.msg.command, msg_field_size);
-	put_data_in_buffer(buffer, packet.msg.arg1, msg_field_size);
-	put_data_in_buffer(buffer, packet.msg.arg2, msg_field_size);
-	put_data_in_buffer(buffer, packet.msg.data_length, msg_field_size);
-	put_data_in_buffer(buffer, packet.msg.data_crc32, msg_field_size);
-	put_data_in_buffer(buffer, packet.msg.magic, msg_field_size);
+	put_to_buffer(buffer, packet.msg.command, msg_field_size);
+	put_to_buffer(buffer, packet.msg.arg1, msg_field_size);
+	put_to_buffer(buffer, packet.msg.arg2, msg_field_size);
+	put_to_buffer(buffer, packet.msg.data_length, msg_field_size);
+	put_to_buffer(buffer, packet.msg.data_crc32, msg_field_size);
+	put_to_buffer(buffer, packet.msg.magic, msg_field_size);
 
-	const char* payload_buf = packet.payload.c_str();
-
-	if (payload_size > 0)
+	if (packet.payload.size() > 0)
 	{
-		buffer.sputn(payload_buf, payload_size);
+		for (const char& c : packet.payload)
+		{
+			buffer.sputc(c);
+		}
 	}
 
 	return buffer.str();

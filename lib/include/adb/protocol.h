@@ -1,9 +1,10 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
-namespace adb 
-{ 
+namespace adb
+{
 namespace protocol
 {
 
@@ -25,19 +26,27 @@ constexpr int MESSAGE_CNXN = parse_message("CNXN");
 
 struct adb_message
 {
-	const uint32_t command;
-	const uint32_t arg1;
-	const uint32_t arg2;
-	const uint32_t data_length;
-	const uint32_t data_crc32;
-	const uint32_t magic = command ^ 0xFFFFFFFF;
+	uint32_t command;
+	uint32_t arg1;
+	uint32_t arg2;
+	uint32_t data_length;
+	uint32_t data_crc32;
+	uint32_t magic;
 };
+
+using payload_t = std::vector<char>;
 
 struct adb_packet
 {
-	const adb_message msg;
-	const std::string payload;
+	adb_message msg;
+	payload_t payload;
 };
+
+#if __cplusplus >= 202002L
+constexpr
+#endif
+payload_t make_payload(const char* _p_payload);
+uint32_t payload_size(const payload_t& payload);
 
 class serializer
 {
