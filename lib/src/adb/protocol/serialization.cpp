@@ -1,23 +1,10 @@
 #include <sstream>
-#include "adb/protocol.h"
-#include <iostream>
+#include "adb/protocol/serialization.h"
 
 namespace adb
 {
 namespace protocol
 {
-
-payload_t make_payload(const char* _p_payload)
-{
-	payload_t payload;
-	payload.insert(payload.end(), _p_payload, _p_payload + strlen(_p_payload));
-	return payload;
-}
-
-uint32_t payload_size(const payload_t& payload)
-{
-	return static_cast<int32_t>(payload.size());
-}
 
 const size_t msg_field_size = sizeof(uint32_t);
 
@@ -82,6 +69,7 @@ std::string serializer::serialize(const adb_packet& packet)
 
 	return buffer.str();
 };
+
 
 }
 }

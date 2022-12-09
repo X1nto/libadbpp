@@ -4,7 +4,13 @@ project("ADBPP")
 
 add_library(${PROJECT_NAME} STATIC)
 
-target_sources(${PROJECT_NAME} PRIVATE "src/connection.cpp" "src/protocol.cpp")
+target_sources(${PROJECT_NAME} 
+    PRIVATE 
+        "src/adb/connection.cpp" 
+        "src/adb/protocol/protocol.cpp"
+        "src/adb/protocol/serialization.cpp" 
+        "src/adb/protocol/util.cpp"
+)
 
 target_include_directories(${PROJECT_NAME}
     PRIVATE

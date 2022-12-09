@@ -8,7 +8,9 @@
 //#include <WinSock2.h>
 #include "adb/connection.h"
 #include "adb/transport.h"
-#include "adb/protocol.h"
+#include "adb/protocol/protocol.h"
+#include "adb/protocol/serialization.h"
+#include "adb/protocol/util.h"
 
 //#pragma comment(lib, "ws2_32.lib")
 
@@ -18,32 +20,14 @@
 //              WSACleanup();                                              \
 //              return -1;                                                 \
 
-std::ostream& operator<<(std::ostream& os, const adb::protocol::adb_packet& packet)
-{
-	os << "{ {" << packet.msg.command << ", " << packet.msg.arg1 << ", " << packet.msg.arg2
-		<< ", " << packet.msg.data_length << ", " << packet.msg.data_crc32 << ", "
-		<< packet.msg.magic << "}, " << '"';
-
-	for (const char& c : packet.payload)
-	{
-		os << c;
-	}
-
-	os << '"' << "}";
-
-	return os;
-}
 
 int main()
 {
-	const adb::protocol::payload_t payload = adb::protocol::make_payload("host::test");
-	const adb::protocol::adb_message msg {
-		.command = adb::protocol::MESSAGE_CNXN,
-		.arg1 = adb::protocol::MAX_PAYLOAD_LEGACY,
-		.arg2 = adb::protocol::VERSION,
-		.data_length = adb::protocol::payload_size(payload)
-	};
-	const adb::protocol::adb_packet packet {msg, payload};
+	const adb::protocol::adb_packet packet = adb::protocol::make_packet(
+		adb::protocol::adb_command::CNXN,
+		adb::protocol::MAX_PAYLOAD_LEGACY,
+		adb::protocol::PROTOCOL_VERSION,
+		"host::test");
 
 	std::string serialized = adb::protocol::serializer::serialize(packet);
 	adb::protocol::adb_packet deserialized = adb::protocol::serializer::deserialize(serialized);
