@@ -25,7 +25,7 @@ constexpr int COMMAND_STLS = command_as_int("STLS");  //0x534C5453
 constexpr int COMMAND_OPEN = command_as_int("OPEN");  //0x4e45504f
 constexpr int COMMAND_OKAY = command_as_int("OKAY");  //0x59414b4f
 constexpr int COMMAND_WRTE = command_as_int("WRTE");  //0x45545257
-constexpr int COMMAND_CLSE = command_as_int("CLSE");   //0x45534c43
+constexpr int COMMAND_CLSE = command_as_int("CLSE");  //0x45534c43
 
 }
 }

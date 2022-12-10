@@ -20,17 +20,18 @@
 //              WSACleanup();                                              \
 //              return -1;                                                 \
 
+using adb_packet = adb::protocol::adb_packet;
+constexpr auto make_connect_packet = adb::protocol::make_connect_packet;
+constexpr auto systype_host = adb::protocol::adb_system_identity_systype::host;
+constexpr auto serialize = adb::protocol::serializer::serialize;
+constexpr auto deserialize = adb::protocol::serializer::deserialize;
 
 int main()
 {
-	const adb::protocol::adb_packet packet = adb::protocol::make_packet(
-		adb::protocol::adb_command::CNXN,
-		adb::protocol::MAX_PAYLOAD_LEGACY,
-		adb::protocol::PROTOCOL_VERSION,
-		"host::test");
+	const adb_packet packet = make_connect_packet(systype_host, "fake-adb", "real-adb");
 
-	std::string serialized = adb::protocol::serializer::serialize(packet);
-	adb::protocol::adb_packet deserialized = adb::protocol::serializer::deserialize(serialized);
+	std::string serialized = serialize(packet);
+	adb_packet deserialized = deserialize(serialized);
 
 	std::cout << "Initial: " << packet << '\n';
 	std::cout << "Serialized: " << serialized << '\n';
