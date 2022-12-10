@@ -15,26 +15,24 @@ void put_to_buffer(std::stringbuf& buffer, Data& data, size_t size)
 }
 
 template<typename Data>
-Data read_from_buffer(std::stringbuf& buffer, size_t size)
+void read_from_buffer(std::stringbuf& buffer, Data& dest, size_t size)
 {
-	Data dest;
 	buffer.sgetn(reinterpret_cast<char*>(&dest), size);
-	return dest;
 }
 
 adb_packet serializer::deserialize(const std::string& input)
 {
 	std::stringbuf buffer(input);
 
-	adb_message message;
-	adb_packet packet;
+	adb_message message {};
+	adb_packet packet {};
 
-	message.command = read_from_buffer<uint32_t>(buffer, msg_field_size);
-	message.arg1 = read_from_buffer<uint32_t>(buffer, msg_field_size);
-	message.arg2 = read_from_buffer<uint32_t>(buffer, msg_field_size);
-	message.data_length = read_from_buffer<uint32_t>(buffer, msg_field_size);
-	message.data_crc32 = read_from_buffer<uint32_t>(buffer, msg_field_size);
-	message.magic = read_from_buffer<uint32_t>(buffer, msg_field_size);
+	read_from_buffer(buffer, message.command, msg_field_size);
+	read_from_buffer(buffer, message.arg1, msg_field_size);
+	read_from_buffer(buffer, message.arg2, msg_field_size);
+	read_from_buffer(buffer, message.data_length, msg_field_size);
+	read_from_buffer(buffer, message.data_crc32, msg_field_size);
+	read_from_buffer(buffer, message.magic, msg_field_size);
 
 	packet.msg = message;
 
